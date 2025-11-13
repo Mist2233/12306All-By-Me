@@ -1,0 +1,788 @@
+# 12306系统API接口设计
+
+设计日期: 2025-11-13
+Designer Agent: API Architect
+输入文件: .artifacts/bdd_requirements.md
+API风格: RESTful
+认证方式: Token-based (JWT)
+
+---
+
+## API基础规范
+
+### 基础URL
+```
+生产环境: https://api.12306.cn
+测试环境: https://api-test.12306.cn
+```
+
+### 通用响应格式
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {},
+  "timestamp": 1699876543210
+}
+```
+
+### 错误码规范
+```
+2xx: 成功
+  200: 请求成功
+  201: 创建成功
+  
+4xx: 客户端错误
+  400: 请求参数错误
+  401: 未授权(未登录或token过期)
+  403: 无权限
+  404: 资源不存在
+  409: 资源冲突
+  429: 请求过于频繁
+  
+5xx: 服务器错误
+  500: 服务器内部错误
+  503: 服务不可用
+```
+
+### 通用请求头
+```
+Content-Type: application/json
+Authorization: Bearer {token}
+X-Request-ID: {uuid}
+X-Device-ID: {device_id}
+```
+
+---
+
+## 模块1: 用户认证API
+
+### 1.1 账号密码登录
+
+#### POST /api/v1/auth/login
+**描述**: 用户名密码登录
+
+**请求参数**:
+```json
+{
+  "username": "user@example.com",
+  "password": "Password123",
+  "nc_token": "SLIDE_VERIFY_TOKEN_123"
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "登录成功",
+  "data": {
+    "user_id": 1001,
+    "username": "user@example.com",
+    "real_name": "张三",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "app_token": "uamtk_token_abc123",
+    "expires_in": 7200,
+    "user_type": 1
+  },
+  "timestamp": 1699876543210
+}
+```
+
+**错误响应**:
+```json
+{
+  "code": 401,
+  "message": "用户名或密码输入错误",
+  "data": null,
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 1.2 滑动验证
+
+#### POST /api/v1/auth/slide-verify
+**描述**: 获取滑动验证配置
+
+**请求参数**:
+```json
+{
+  "scene": "login"
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "nc_token": "SLIDE_TOKEN_ABC",
+    "scene": "login",
+    "session_id": "SESSION_123"
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 1.3 短信验证码
+
+#### POST /api/v1/auth/sms/send
+**描述**: 发送短信验证码
+
+**请求参数**:
+```json
+{
+  "mobile": "13800138000",
+  "code_type": 1
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "验证码已发送",
+  "data": {
+    "expires_in": 300,
+    "retry_after": 60
+  },
+  "timestamp": 1699876543210
+}
+```
+
+**限流**: 同一手机号60秒内只能发送1次
+
+---
+
+#### POST /api/v1/auth/sms/verify
+**描述**: 验证短信验证码并登录
+
+**请求参数**:
+```json
+{
+  "mobile": "13800138000",
+  "code": "123456",
+  "id_card_last4": "1234"
+}
+```
+
+**响应**: 同登录接口响应
+
+---
+
+### 1.4 扫码登录
+
+#### GET /api/v1/auth/qrcode/generate
+**描述**: 生成登录二维码
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "qr_id": "QR_UUID_123",
+    "qr_data": "https://12306.cn/qr?id=QR_UUID_123",
+    "qr_image": "data:image/png;base64,iVBORw0KG...",
+    "expires_in": 120
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+#### GET /api/v1/auth/qrcode/status/{qr_id}
+**描述**: 轮询二维码扫描状态
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "status": "scanned",
+    "user_id": 1001,
+    "token": "eyJhbGci..."
+  },
+  "timestamp": 1699876543210
+}
+```
+
+**状态枚举**:
+- `pending`: 等待扫描
+- `scanned`: 已扫描，等待确认
+- `confirmed`: 已确认
+- `expired`: 已过期
+- `canceled`: 已取消
+
+---
+
+### 1.5 登出
+
+#### POST /api/v1/auth/logout
+**描述**: 用户登出
+
+**请求头**: 
+```
+Authorization: Bearer {token}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "登出成功",
+  "data": null,
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 1.6 Token刷新
+
+#### POST /api/v1/auth/refresh
+**描述**: 刷新访问令牌
+
+**请求参数**:
+```json
+{
+  "refresh_token": "REFRESH_TOKEN_ABC"
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "token": "NEW_ACCESS_TOKEN",
+    "expires_in": 7200
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+## 模块2: 车票查询API
+
+### 2.1 车站查询
+
+#### GET /api/v1/stations/search
+**描述**: 搜索车站(支持拼音、简拼、汉字)
+
+**查询参数**:
+```
+q: "bei" (搜索关键词)
+limit: 10 (返回数量，默认10)
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "station_id": 1,
+      "station_code": "BJP",
+      "station_name": "北京",
+      "pinyin": "beijing",
+      "pinyin_abbr": "bj",
+      "city": "北京",
+      "province": "北京"
+    },
+    {
+      "station_id": 15,
+      "station_code": "BBH",
+      "station_name": "蚌埠",
+      "pinyin": "bengbu",
+      "pinyin_abbr": "bb",
+      "city": "蚌埠",
+      "province": "安徽"
+    }
+  ],
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+#### GET /api/v1/stations
+**描述**: 获取所有车站列表
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 3456,
+    "stations": [...]
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 2.2 余票查询
+
+#### GET /api/v1/tickets/query
+**描述**: 查询余票信息
+
+**查询参数**:
+```
+from_station: "BJP" (出发站代码)
+to_station: "SHH" (到达站代码)
+travel_date: "2025-11-15" (出发日期)
+is_student: false (是否学生票)
+is_high_speed_only: false (仅高铁动车)
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "query_info": {
+      "from_station": "北京",
+      "to_station": "上海",
+      "travel_date": "2025-11-15"
+    },
+    "trains": [
+      {
+        "train_id": 1001,
+        "train_no": "G1",
+        "train_type": 1,
+        "train_type_name": "高铁",
+        "from_station": "北京南",
+        "to_station": "上海虹桥",
+        "departure_time": "08:00",
+        "arrival_time": "12:28",
+        "duration": 268,
+        "duration_display": "4小时28分",
+        "can_buy": true,
+        "seats": [
+          {
+            "seat_type_id": 3,
+            "seat_type_name": "商务座",
+            "available_seats": 15,
+            "price": 1748.00,
+            "student_price": null
+          },
+          {
+            "seat_type_id": 2,
+            "seat_type_name": "一等座",
+            "available_seats": 68,
+            "price": 933.00,
+            "student_price": null
+          },
+          {
+            "seat_type_id": 1,
+            "seat_type_name": "二等座",
+            "available_seats": 246,
+            "price": 553.00,
+            "student_price": 415.00
+          }
+        ]
+      }
+    ]
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 2.3 往返票查询
+
+#### GET /api/v1/tickets/query-round-trip
+**描述**: 查询往返票
+
+**查询参数**:
+```
+from_station: "BJP"
+to_station: "SHH"
+go_date: "2025-11-15"
+return_date: "2025-11-20"
+is_student: false
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "go_trains": [...],
+    "return_trains": [...]
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+## 模块3: 订单管理API
+
+### 3.1 创建订单
+
+#### POST /api/v1/orders/create
+**描述**: 创建订单
+
+**请求头**:
+```
+Authorization: Bearer {token}
+```
+
+**请求参数**:
+```json
+{
+  "train_id": 1001,
+  "travel_date": "2025-11-15",
+  "from_station_id": 1,
+  "to_station_id": 50,
+  "passengers": [
+    {
+      "contact_id": 10,
+      "passenger_name": "张三",
+      "id_type": 1,
+      "id_number": "110101199001011234",
+      "mobile": "13800138000",
+      "passenger_type": 1,
+      "seat_type_id": 2
+    }
+  ]
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "订单创建成功",
+  "data": {
+    "order_id": 20001,
+    "order_no": "E202511151234567890",
+    "train_no": "G1",
+    "travel_date": "2025-11-15",
+    "from_station": "北京南",
+    "to_station": "上海虹桥",
+    "departure_time": "08:00",
+    "arrival_time": "12:28",
+    "total_amount": 933.00,
+    "payment_deadline": "2025-11-15T08:30:00Z",
+    "passengers": [
+      {
+        "passenger_id": 30001,
+        "passenger_name": "张三",
+        "seat_type_name": "一等座",
+        "seat_no": null,
+        "ticket_price": 933.00
+      }
+    ],
+    "order_status": 1,
+    "payment_status": 0
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 3.2 订单详情
+
+#### GET /api/v1/orders/{order_id}
+**描述**: 获取订单详情
+
+**请求头**:
+```
+Authorization: Bearer {token}
+```
+
+**响应**: 同创建订单响应格式
+
+---
+
+### 3.3 订单列表
+
+#### GET /api/v1/orders
+**描述**: 获取用户订单列表
+
+**查询参数**:
+```
+page: 1
+page_size: 10
+order_status: 1 (可选，订单状态筛选)
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 45,
+    "page": 1,
+    "page_size": 10,
+    "orders": [...]
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 3.4 取消订单
+
+#### POST /api/v1/orders/{order_id}/cancel
+**描述**: 取消订单
+
+**请求参数**:
+```json
+{
+  "cancel_reason": "行程变更"
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "订单已取消",
+  "data": {
+    "order_id": 20001,
+    "order_status": 5,
+    "refund_amount": 933.00
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+### 3.5 订单支付
+
+#### POST /api/v1/orders/{order_id}/pay
+**描述**: 支付订单
+
+**请求参数**:
+```json
+{
+  "payment_method": "alipay",
+  "return_url": "https://12306.cn/orders/success"
+}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "payment_url": "https://pay.alipay.com/...",
+    "payment_id": "PAY_123456"
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+## 模块4: 用户中心API
+
+### 4.1 个人信息
+
+#### GET /api/v1/user/profile
+**描述**: 获取个人信息
+
+**请求头**:
+```
+Authorization: Bearer {token}
+```
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "user_id": 1001,
+    "username": "user@example.com",
+    "email": "user@example.com",
+    "mobile": "13800138000",
+    "real_name": "张三",
+    "id_type": 1,
+    "id_type_name": "身份证",
+    "id_number": "110101199001011234",
+    "user_type": 1,
+    "user_type_name": "普通用户",
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+#### PUT /api/v1/user/profile
+**描述**: 更新个人信息
+
+**请求参数**:
+```json
+{
+  "real_name": "张三",
+  "email": "newemail@example.com",
+  "mobile": "13900139000"
+}
+```
+
+**响应**: 同获取个人信息响应
+
+---
+
+### 4.2 常用联系人
+
+#### GET /api/v1/user/contacts
+**描述**: 获取常用联系人列表
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "contact_id": 10,
+      "contact_name": "张三",
+      "id_type": 1,
+      "id_type_name": "身份证",
+      "id_number": "110101199001011234",
+      "mobile": "13800138000",
+      "passenger_type": 1,
+      "passenger_type_name": "成人",
+      "is_default": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+#### POST /api/v1/user/contacts
+**描述**: 添加常用联系人
+
+**请求参数**:
+```json
+{
+  "contact_name": "赵六",
+  "id_type": 1,
+  "id_number": "110101199501011234",
+  "mobile": "13800138000",
+  "passenger_type": 1,
+  "is_default": false
+}
+```
+
+**响应**:
+```json
+{
+  "code": 201,
+  "message": "添加联系人成功",
+  "data": {
+    "contact_id": 15,
+    "contact_name": "赵六",
+    ...
+  },
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+#### PUT /api/v1/user/contacts/{contact_id}
+**描述**: 更新常用联系人
+
+**请求参数**: 同添加联系人
+
+---
+
+#### DELETE /api/v1/user/contacts/{contact_id}
+**描述**: 删除常用联系人
+
+**响应**:
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null,
+  "timestamp": 1699876543210
+}
+```
+
+---
+
+## API安全规范
+
+### 1. 接口限流
+```yaml
+全局限流: 1000次/分钟/IP
+登录接口: 5次/分钟/IP
+短信发送: 1次/分钟/手机号
+查询接口: 100次/分钟/用户
+```
+
+### 2. 参数验证
+```javascript
+// 示例：手机号验证
+mobile: {
+  type: 'string',
+  pattern: /^1[3-9]\d{9}$/,
+  required: true
+}
+
+// 身份证号验证
+id_number: {
+  type: 'string',
+  pattern: /^[1-9]\d{5}(19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/,
+  required: true
+}
+
+// 日期格式验证
+travel_date: {
+  type: 'string',
+  pattern: /^\d{4}-\d{2}-\d{2}$/,
+  required: true
+}
+```
+
+### 3. 敏感数据处理
+```yaml
+密码:
+  - 前端: SM4加密传输
+  - 后端: BCrypt哈希存储
+  
+身份证号:
+  - 返回时脱敏: 显示前6后4位
+  - 示例: "110101********1234"
+  
+手机号:
+  - 返回时脱敏: 显示前3后4位
+  - 示例: "138****8000"
+```
+
+---
+
+下一步: UI组件设计 (design_ui_components.md)

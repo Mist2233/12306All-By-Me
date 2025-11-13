@@ -1,0 +1,405 @@
+# 12306系统数据库设计
+
+设计日期: 2025-11-13
+Designer Agent: Database Architect
+输入文件: .artifacts/bdd_requirements.md
+数据库类型: MySQL 8.0+
+
+---
+
+## 1. 用户认证模块 (User Authentication)
+
+### 1.1 users - 用户表
+```sql
+CREATE TABLE users (
+  user_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+  username VARCHAR(50) UNIQUE NOT NULL COMMENT '用户名',
+  email VARCHAR(100) UNIQUE COMMENT '邮箱',
+  mobile VARCHAR(20) UNIQUE COMMENT '手机号',
+  password_hash VARCHAR(255) NOT NULL COMMENT '密码哈希(SM4加密)',
+  salt VARCHAR(64) NOT NULL COMMENT '密码盐值',
+  real_name VARCHAR(50) COMMENT '真实姓名',
+  id_type TINYINT DEFAULT 1 COMMENT '证件类型: 1-身份证 2-护照 3-港澳通行证 4-台湾通行证',
+  id_number VARCHAR(30) COMMENT '证件号码',
+  user_type TINYINT DEFAULT 1 COMMENT '用户类型: 1-普通 2-学生 3-VIP',
+  status TINYINT DEFAULT 1 COMMENT '状态: 0-禁用 1-正常 2-锁定',
+  login_attempts INT DEFAULT 0 COMMENT '登录尝试次数',
+  last_login_at TIMESTAMP COMMENT '最后登录时间',
+  last_login_ip VARCHAR(45) COMMENT '最后登录IP',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  
+  INDEX idx_username (username),
+  INDEX idx_email (email),
+  INDEX idx_mobile (mobile),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+```
+
+### 1.2 user_sessions - 用户会话表
+```sql
+CREATE TABLE user_sessions (
+  session_id VARCHAR(64) PRIMARY KEY COMMENT '会话ID',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  token VARCHAR(255) NOT NULL COMMENT '认证Token(uamtk)',
+  app_token VARCHAR(255) COMMENT '应用Token(newapptk)',
+  device_info VARCHAR(500) COMMENT '设备信息',
+  ip_address VARCHAR(45) COMMENT 'IP地址',
+  user_agent TEXT COMMENT 'User Agent',
+  expires_at TIMESTAMP NOT NULL COMMENT '过期时间',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  last_active_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '最后活跃时间',
+  
+  INDEX idx_user_id (user_id),
+  INDEX idx_token (token),
+  INDEX idx_expires_at (expires_at),
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户会话表';
+```
+
+### 1.3 verification_codes - 验证码表
+```sql
+CREATE TABLE verification_codes (
+  code_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '验证码ID',
+  mobile VARCHAR(20) NOT NULL COMMENT '手机号',
+  code VARCHAR(6) NOT NULL COMMENT '验证码',
+  code_type TINYINT NOT NULL COMMENT '类型: 1-登录 2-注册 3-重置密码',
+  status TINYINT DEFAULT 1 COMMENT '状态: 0-已使用 1-未使用 2-已过期',
+  attempts INT DEFAULT 0 COMMENT '验证尝试次数',
+  expires_at TIMESTAMP NOT NULL COMMENT '过期时间',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  used_at TIMESTAMP COMMENT '使用时间',
+  
+  INDEX idx_mobile (mobile),
+  INDEX idx_code (code),
+  INDEX idx_status_expires (status, expires_at),
+  INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='验证码表';
+```
+
+### 1.4 login_logs - 登录日志表
+```sql
+CREATE TABLE login_logs (
+  log_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '日志ID',
+  user_id BIGINT COMMENT '用户ID(失败时可能为NULL)',
+  username VARCHAR(50) COMMENT '用户名',
+  login_method TINYINT NOT NULL COMMENT '登录方式: 1-账号密码 2-扫码 3-短信验证',
+  verification_type TINYINT COMMENT '验证方式: 1-滑动验证 2-短信验证',
+  status TINYINT NOT NULL COMMENT '状态: 0-失败 1-成功',
+  failure_reason VARCHAR(255) COMMENT '失败原因',
+  ip_address VARCHAR(45) COMMENT 'IP地址',
+  user_agent TEXT COMMENT 'User Agent',
+  device_info VARCHAR(500) COMMENT '设备信息',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  
+  INDEX idx_user_id (user_id),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at),
+  INDEX idx_ip_address (ip_address)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志表';
+```
+
+---
+
+## 2. 车站和车次模块 (Station & Train)
+
+### 2.1 stations - 车站表
+```sql
+CREATE TABLE stations (
+  station_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '车站ID',
+  station_code VARCHAR(10) UNIQUE NOT NULL COMMENT '车站代码(如BJP)',
+  station_name VARCHAR(50) NOT NULL COMMENT '车站名称',
+  pinyin VARCHAR(100) NOT NULL COMMENT '拼音全拼',
+  pinyin_abbr VARCHAR(20) NOT NULL COMMENT '拼音简拼',
+  city_code VARCHAR(10) COMMENT '城市代码',
+  province VARCHAR(20) COMMENT '省份',
+  city VARCHAR(50) COMMENT '城市',
+  status TINYINT DEFAULT 1 COMMENT '状态: 0-停用 1-启用',
+  display_order INT DEFAULT 0 COMMENT '显示顺序',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  
+  INDEX idx_station_code (station_code),
+  INDEX idx_station_name (station_name),
+  INDEX idx_pinyin (pinyin),
+  INDEX idx_pinyin_abbr (pinyin_abbr),
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='车站表';
+```
+
+### 2.2 trains - 车次表
+```sql
+CREATE TABLE trains (
+  train_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '车次ID',
+  train_no VARCHAR(20) UNIQUE NOT NULL COMMENT '车次号(如G1)',
+  train_type TINYINT NOT NULL COMMENT '车次类型: 1-高铁 2-动车 3-普速',
+  from_station_id INT NOT NULL COMMENT '始发站ID',
+  to_station_id INT NOT NULL COMMENT '终点站ID',
+  departure_time TIME NOT NULL COMMENT '发车时间',
+  arrival_time TIME NOT NULL COMMENT '到达时间',
+  duration INT NOT NULL COMMENT '运行时长(分钟)',
+  distance DECIMAL(8,2) COMMENT '里程(公里)',
+  status TINYINT DEFAULT 1 COMMENT '状态: 0-停运 1-正常',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  
+  INDEX idx_train_no (train_no),
+  INDEX idx_train_type (train_type),
+  INDEX idx_from_to (from_station_id, to_station_id),
+  INDEX idx_status (status),
+  FOREIGN KEY (from_station_id) REFERENCES stations(station_id),
+  FOREIGN KEY (to_station_id) REFERENCES stations(station_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='车次表';
+```
+
+### 2.3 train_schedules - 车次时刻表
+```sql
+CREATE TABLE train_schedules (
+  schedule_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '时刻ID',
+  train_id BIGINT NOT NULL COMMENT '车次ID',
+  station_id INT NOT NULL COMMENT '车站ID',
+  sequence_no INT NOT NULL COMMENT '停靠顺序',
+  arrival_time TIME COMMENT '到达时间(首站为NULL)',
+  departure_time TIME COMMENT '发车时间(末站为NULL)',
+  stop_duration INT COMMENT '停车时长(分钟)',
+  distance_from_start DECIMAL(8,2) COMMENT '距起点距离(公里)',
+  is_start_station BOOLEAN DEFAULT FALSE COMMENT '是否始发站',
+  is_end_station BOOLEAN DEFAULT FALSE COMMENT '是否终点站',
+  can_sell BOOLEAN DEFAULT TRUE COMMENT '是否可售',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  
+  UNIQUE KEY uk_train_station_seq (train_id, station_id, sequence_no),
+  INDEX idx_train_id (train_id),
+  INDEX idx_station_id (station_id),
+  INDEX idx_sequence (sequence_no),
+  FOREIGN KEY (train_id) REFERENCES trains(train_id) ON DELETE CASCADE,
+  FOREIGN KEY (station_id) REFERENCES stations(station_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='车次时刻表';
+```
+
+### 2.4 seat_types - 座位类型表
+```sql
+CREATE TABLE seat_types (
+  seat_type_id TINYINT PRIMARY KEY AUTO_INCREMENT COMMENT '座位类型ID',
+  seat_code VARCHAR(10) UNIQUE NOT NULL COMMENT '座位代码(如1-二等座)',
+  seat_name VARCHAR(20) NOT NULL COMMENT '座位名称',
+  train_type TINYINT NOT NULL COMMENT '适用车型: 1-高铁 2-动车 3-普速',
+  display_order INT DEFAULT 0 COMMENT '显示顺序',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  
+  INDEX idx_train_type (train_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='座位类型表';
+
+-- 初始数据
+INSERT INTO seat_types (seat_code, seat_name, train_type, display_order) VALUES
+('1', '二等座', 1, 1),
+('2', '一等座', 1, 2),
+('3', '商务座', 1, 3),
+('4', '硬座', 3, 4),
+('5', '硬卧', 3, 5),
+('6', '软卧', 3, 6);
+```
+
+---
+
+## 3. 票务模块 (Ticketing)
+
+### 3.1 ticket_inventory - 余票库存表
+```sql
+CREATE TABLE ticket_inventory (
+  inventory_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '库存ID',
+  train_id BIGINT NOT NULL COMMENT '车次ID',
+  travel_date DATE NOT NULL COMMENT '乘车日期',
+  from_station_id INT NOT NULL COMMENT '出发站ID',
+  to_station_id INT NOT NULL COMMENT '到达站ID',
+  seat_type_id TINYINT NOT NULL COMMENT '座位类型ID',
+  total_seats INT NOT NULL COMMENT '总座位数',
+  available_seats INT NOT NULL COMMENT '可售座位数',
+  locked_seats INT DEFAULT 0 COMMENT '锁定座位数',
+  sold_seats INT DEFAULT 0 COMMENT '已售座位数',
+  base_price DECIMAL(10,2) NOT NULL COMMENT '基础价格',
+  student_price DECIMAL(10,2) COMMENT '学生价格',
+  status TINYINT DEFAULT 1 COMMENT '状态: 0-停售 1-在售',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  
+  UNIQUE KEY uk_inventory (train_id, travel_date, from_station_id, to_station_id, seat_type_id),
+  INDEX idx_train_date (train_id, travel_date),
+  INDEX idx_from_to_date (from_station_id, to_station_id, travel_date),
+  INDEX idx_status (status),
+  FOREIGN KEY (train_id) REFERENCES trains(train_id),
+  FOREIGN KEY (from_station_id) REFERENCES stations(station_id),
+  FOREIGN KEY (to_station_id) REFERENCES stations(station_id),
+  FOREIGN KEY (seat_type_id) REFERENCES seat_types(seat_type_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='余票库存表';
+```
+
+### 3.2 query_history - 查询历史表
+```sql
+CREATE TABLE query_history (
+  query_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '查询ID',
+  user_id BIGINT COMMENT '用户ID(未登录时为NULL)',
+  session_id VARCHAR(64) COMMENT '会话ID',
+  from_station_id INT NOT NULL COMMENT '出发站ID',
+  to_station_id INT NOT NULL COMMENT '到达站ID',
+  travel_date DATE NOT NULL COMMENT '出发日期',
+  return_date DATE COMMENT '返程日期(往返票)',
+  is_round_trip BOOLEAN DEFAULT FALSE COMMENT '是否往返',
+  is_student BOOLEAN DEFAULT FALSE COMMENT '是否学生票',
+  is_high_speed_only BOOLEAN DEFAULT FALSE COMMENT '仅高铁动车',
+  ip_address VARCHAR(45) COMMENT 'IP地址',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '查询时间',
+  
+  INDEX idx_user_id (user_id),
+  INDEX idx_from_to_date (from_station_id, to_station_id, travel_date),
+  INDEX idx_created_at (created_at),
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='查询历史表';
+```
+
+---
+
+## 4. 订单模块 (Order Management)
+
+### 4.1 orders - 订单表
+```sql
+CREATE TABLE orders (
+  order_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单ID',
+  order_no VARCHAR(32) UNIQUE NOT NULL COMMENT '订单号',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  train_id BIGINT NOT NULL COMMENT '车次ID',
+  train_no VARCHAR(20) NOT NULL COMMENT '车次号',
+  travel_date DATE NOT NULL COMMENT '乘车日期',
+  from_station_id INT NOT NULL COMMENT '出发站ID',
+  from_station_name VARCHAR(50) NOT NULL COMMENT '出发站名',
+  to_station_id INT NOT NULL COMMENT '到达站ID',
+  to_station_name VARCHAR(50) NOT NULL COMMENT '到达站名',
+  departure_time TIME NOT NULL COMMENT '发车时间',
+  arrival_time TIME NOT NULL COMMENT '到达时间',
+  total_amount DECIMAL(10,2) NOT NULL COMMENT '订单总金额',
+  paid_amount DECIMAL(10,2) DEFAULT 0 COMMENT '已付金额',
+  order_status TINYINT DEFAULT 1 COMMENT '订单状态: 1-待支付 2-已支付 3-已出票 4-已退票 5-已取消',
+  payment_status TINYINT DEFAULT 0 COMMENT '支付状态: 0-未支付 1-已支付 2-已退款',
+  payment_deadline TIMESTAMP COMMENT '支付截止时间(30分钟)',
+  paid_at TIMESTAMP COMMENT '支付时间',
+  canceled_at TIMESTAMP COMMENT '取消时间',
+  cancel_reason VARCHAR(255) COMMENT '取消原因',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  
+  INDEX idx_order_no (order_no),
+  INDEX idx_user_id (user_id),
+  INDEX idx_order_status (order_status),
+  INDEX idx_payment_status (payment_status),
+  INDEX idx_travel_date (travel_date),
+  INDEX idx_created_at (created_at),
+  FOREIGN KEY (user_id) REFERENCES users(user_id),
+  FOREIGN KEY (train_id) REFERENCES trains(train_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表';
+```
+
+### 4.2 order_passengers - 订单乘客表
+```sql
+CREATE TABLE order_passengers (
+  passenger_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '订单乘客ID',
+  order_id BIGINT NOT NULL COMMENT '订单ID',
+  contact_id BIGINT COMMENT '常用联系人ID(如果选择了常用联系人)',
+  passenger_name VARCHAR(50) NOT NULL COMMENT '乘客姓名',
+  id_type TINYINT NOT NULL COMMENT '证件类型',
+  id_number VARCHAR(30) NOT NULL COMMENT '证件号码',
+  mobile VARCHAR(20) COMMENT '手机号',
+  passenger_type TINYINT DEFAULT 1 COMMENT '旅客类型: 1-成人 2-儿童 3-学生',
+  seat_type_id TINYINT NOT NULL COMMENT '座位类型ID',
+  seat_type_name VARCHAR(20) NOT NULL COMMENT '座位类型名称',
+  seat_no VARCHAR(10) COMMENT '座位号',
+  ticket_price DECIMAL(10,2) NOT NULL COMMENT '票价',
+  ticket_no VARCHAR(32) COMMENT '车票号',
+  ticket_status TINYINT DEFAULT 1 COMMENT '车票状态: 1-待出票 2-已出票 3-已退票',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  
+  INDEX idx_order_id (order_id),
+  INDEX idx_contact_id (contact_id),
+  INDEX idx_ticket_no (ticket_no),
+  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+  FOREIGN KEY (seat_type_id) REFERENCES seat_types(seat_type_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单乘客表';
+```
+
+---
+
+## 5. 用户中心模块 (User Center)
+
+### 5.1 user_contacts - 常用联系人表
+```sql
+CREATE TABLE user_contacts (
+  contact_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '联系人ID',
+  user_id BIGINT NOT NULL COMMENT '用户ID',
+  contact_name VARCHAR(50) NOT NULL COMMENT '姓名',
+  id_type TINYINT NOT NULL COMMENT '证件类型: 1-身份证 2-护照 3-港澳通行证 4-台湾通行证',
+  id_number VARCHAR(30) NOT NULL COMMENT '证件号码',
+  mobile VARCHAR(20) COMMENT '手机号',
+  passenger_type TINYINT DEFAULT 1 COMMENT '旅客类型: 1-成人 2-儿童 3-学生',
+  is_default BOOLEAN DEFAULT FALSE COMMENT '是否默认联系人',
+  status TINYINT DEFAULT 1 COMMENT '状态: 0-删除 1-正常',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  
+  INDEX idx_user_id (user_id),
+  INDEX idx_status (status),
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='常用联系人表';
+```
+
+---
+
+## 索引优化建议
+
+### 复合索引
+```sql
+-- users表
+ALTER TABLE users ADD INDEX idx_username_status (username, status);
+ALTER TABLE users ADD INDEX idx_mobile_status (mobile, status);
+
+-- ticket_inventory表
+ALTER TABLE ticket_inventory ADD INDEX idx_query_main (
+  from_station_id, to_station_id, travel_date, status
+);
+
+-- orders表
+ALTER TABLE orders ADD INDEX idx_user_status (user_id, order_status);
+ALTER TABLE orders ADD INDEX idx_payment_deadline (payment_deadline, order_status);
+```
+
+---
+
+## 数据库配置建议
+
+### MySQL配置
+```ini
+[mysqld]
+# InnoDB配置
+innodb_buffer_pool_size = 4G
+innodb_log_file_size = 512M
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_method = O_DIRECT
+
+# 连接配置
+max_connections = 1000
+max_connect_errors = 1000000
+
+# 查询缓存
+query_cache_type = 0
+query_cache_size = 0
+
+# 字符集
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# 时区
+default-time-zone = '+8:00'
+```
+
+---
+
+下一步: API接口设计 (design_api_interfaces.yml)
