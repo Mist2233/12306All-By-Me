@@ -11,6 +11,9 @@ build/
 # 爬取输出目录
 deconstructed_site/
 
+# 认证状态文件（包含登录凭证）
+auth_state.json
+
 # 日志文件
 *.log
 crawl_log.txt

@@ -1,6 +1,6 @@
 # 12306系统E2E端到端测试用例
 
-生成日期: 2025-11-13
+生成日期: 2025 - 11 - 13
 TestGenerator Agent: E2E Test Engineer
 测试框架: Playwright + TypeScript
 
@@ -9,7 +9,7 @@ TestGenerator Agent: E2E Test Engineer
 ## 测试配置
 
 ### Playwright配置
-```typescript
+    ```typescript
 // playwright.config.ts
 import { defineConfig, devices } from '@playwright/test'
 
@@ -44,7 +44,7 @@ export default defineConfig({
 ## 1. 关键用户路径测试
 
 ### 1.1 完整购票流程
-```typescript
+    ```typescript
 // tests/e2e/ticket-purchase-flow.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -103,7 +103,7 @@ test.describe('完整购票流程', () => {
     // 选择明天的日期
     await page.click('input[aria-label="出发日期"]')
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    await page.click(`text=${tomorrow.getDate()}`)
+    await page.click(`text = ${ tomorrow.getDate() } `)
     
     await page.click('button:has-text("查询")')
     
@@ -152,7 +152,7 @@ test.describe('完整购票流程', () => {
 ```
 
 ### 1.2 往返票购买流程
-```typescript
+    ```typescript
 // tests/e2e/round-trip-purchase.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -197,12 +197,12 @@ test.describe('往返票购买流程', () => {
     // 去程日期（3天后）
     await page.click('input[aria-label="去程日期"]')
     const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-    await page.click(`text=${threeDaysLater.getDate()}`)
+    await page.click(`text = ${ threeDaysLater.getDate() } `)
     
     // 返程日期（5天后）
     await page.click('input[aria-label="返程日期"]')
     const fiveDaysLater = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
-    await page.click(`text=${fiveDaysLater.getDate()}`)
+    await page.click(`text = ${ fiveDaysLater.getDate() } `)
     
     // Step 3: 提交查询
     await page.click('button:has-text("查询")')
@@ -244,7 +244,7 @@ test.describe('往返票购买流程', () => {
 ## 2. 用户认证场景测试
 
 ### 2.1 扫码登录流程
-```typescript
+    ```typescript
 // tests/e2e/qrcode-login.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -268,7 +268,7 @@ test.describe('扫码登录流程', () => {
     
     // Step 4: 模拟APP扫码（在新页面打开模拟API）
     const apiPage = await context.newPage()
-    await apiPage.goto(`/api/v1/auth/qrcode/scan?qrcode_id=${qrcodeId}&user_id=test_user`)
+    await apiPage.goto(`/ api / v1 / auth / qrcode / scan ? qrcode_id = ${ qrcodeId }& user_id=test_user`)
     
     // Step 5: 等待页面自动跳转
     await expect(page).toHaveURL('/', { timeout: 10000 })
@@ -302,7 +302,7 @@ test.describe('扫码登录流程', () => {
 ```
 
 ### 2.2 短信验证登录流程
-```typescript
+    ```typescript
 // tests/e2e/sms-login.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -367,7 +367,7 @@ test.describe('短信验证登录流程', () => {
 ## 3. 订单管理场景测试
 
 ### 3.1 订单查询与取消
-```typescript
+    ```typescript
 // tests/e2e/order-management.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -401,7 +401,7 @@ test.describe('订单管理', () => {
     
     await page.click('input[aria-label="出发日期"]')
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    await page.click(`text=${tomorrow.getDate()}`)
+    await page.click(`text = ${ tomorrow.getDate() } `)
     
     await page.click('button:has-text("查询")')
     await page.locator('button:has-text("预订")').first().click()
@@ -450,7 +450,7 @@ test.describe('订单管理', () => {
     
     await page.click('input[aria-label="出发日期"]')
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    await page.click(`text=${tomorrow.getDate()}`)
+    await page.click(`text = ${ tomorrow.getDate() } `)
     
     await page.click('button:has-text("查询")')
     
@@ -483,7 +483,7 @@ test.describe('订单管理', () => {
 ## 4. 用户中心场景测试
 
 ### 4.1 常用联系人管理
-```typescript
+    ```typescript
 // tests/e2e/contacts-management.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -600,7 +600,7 @@ test.describe('常用联系人管理', () => {
 ## 5. 性能与稳定性测试
 
 ### 5.1 并发查询测试
-```typescript
+    ```typescript
 // tests/e2e/performance.spec.ts
 import { test, expect } from '@playwright/test'
 
@@ -616,7 +616,7 @@ test.describe('性能测试', () => {
     
     await page.click('input[aria-label="出发日期"]')
     const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    await page.click(`text=${tomorrow.getDate()}`)
+    await page.click(`text = ${ tomorrow.getDate() } `)
     
     // 并发发起100次查询
     const startTime = Date.now()
@@ -654,7 +654,7 @@ test.describe('性能测试', () => {
 ## 测试总结
 
 ### 测试覆盖率目标
-```yaml
+    ```yaml
 E2E测试覆盖:
   关键用户路径: 5个核心场景
   用户认证: 3种登录方式
@@ -675,5 +675,5 @@ E2E测试覆盖:
 
 ---
 
-Next-Agent: Developer
+    Next - Agent: Developer
 任务: 基于TestGenerator生成的测试用例，实施TDD开发，实现所有功能使测试通过

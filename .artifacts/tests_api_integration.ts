@@ -1,6 +1,6 @@
 # 12306系统后端API集成测试用例
 
-生成日期: 2025-11-13
+生成日期: 2025 - 11 - 13
 TestGenerator Agent: Backend Test Engineer
 测试框架: Jest + Supertest + TypeORM
 
@@ -9,7 +9,7 @@ TestGenerator Agent: Backend Test Engineer
 ## 1. 认证接口测试
 
 ### 1.1 用户登录接口
-```typescript
+    ```typescript
 // src/modules/auth/__tests__/login.test.ts
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
 import request from 'supertest'
@@ -187,7 +187,7 @@ describe('POST /api/v1/auth/login', () => {
 ```
 
 ### 1.2 短信验证码接口
-```typescript
+    ```typescript
 // src/modules/auth/__tests__/sms.test.ts
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import request from 'supertest'
@@ -341,8 +341,8 @@ describe('POST /api/v1/auth/sms/verify', () => {
   it('验证码过期应该返回400', async () => {
     // 创建过期验证码
     await getConnection().query(
-      `INSERT INTO verification_codes (verification_id, phone, code, type, expires_at) 
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO verification_codes(verification_id, phone, code, type, expires_at)
+VALUES(?, ?, ?, ?, ?)`,
       ['expired_id', '13800138000', '123456', 'login', new Date(Date.now() - 1000)]
     )
 
@@ -361,7 +361,7 @@ describe('POST /api/v1/auth/sms/verify', () => {
 ```
 
 ### 1.3 二维码登录接口
-```typescript
+    ```typescript
 // src/modules/auth/__tests__/qrcode.test.ts
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import request from 'supertest'
@@ -394,7 +394,7 @@ describe('GET /api/v1/auth/qrcode/status', () => {
 
     // 检查状态
     const response = await request(app)
-      .get(`/api/v1/auth/qrcode/status?qrcode_id=${qrcode_id}`)
+      .get(`/ api / v1 / auth / qrcode / status ? qrcode_id = ${ qrcode_id } `)
       .expect(200)
 
     expect(response.body.code).toBe(0)
@@ -404,8 +404,8 @@ describe('GET /api/v1/auth/qrcode/status', () => {
   it('二维码过期应该返回expired', async () => {
     // 插入过期二维码
     await getConnection().query(
-      `INSERT INTO qrcode_login (qrcode_id, status, expires_at) 
-       VALUES (?, ?, ?)`,
+      `INSERT INTO qrcode_login(qrcode_id, status, expires_at)
+VALUES(?, ?, ?)`,
       ['expired_qr', 'pending', new Date(Date.now() - 1000)]
     )
 
@@ -424,7 +424,7 @@ describe('GET /api/v1/auth/qrcode/status', () => {
 ## 2. 车站车次接口测试
 
 ### 2.1 车站查询接口
-```typescript
+    ```typescript
 // src/modules/stations/__tests__/search.test.ts
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import request from 'supertest'
@@ -512,7 +512,7 @@ describe('GET /api/v1/stations/search', () => {
 ```
 
 ### 2.2 车票查询接口
-```typescript
+    ```typescript
 // src/modules/tickets/__tests__/query.test.ts
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import request from 'supertest'
@@ -625,7 +625,7 @@ describe('GET /api/v1/tickets/query', () => {
 ## 3. 订单接口测试
 
 ### 3.1 创建订单接口
-```typescript
+    ```typescript
 // src/modules/orders/__tests__/create.test.ts
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import request from 'supertest'
@@ -666,7 +666,7 @@ describe('POST /api/v1/orders/create', () => {
 
     const response = await request(app)
       .post('/api/v1/orders/create')
-      .set('Authorization', `Bearer ${accessToken}`)
+      .set('Authorization', `Bearer ${ accessToken } `)
       .send({
         train_schedule_id: train.train_schedule_id,
         train_date: tomorrow.toISOString().split('T')[0],
@@ -711,7 +711,7 @@ describe('POST /api/v1/orders/create', () => {
   it('乘客信息不完整应该返回400', async () => {
     const response = await request(app)
       .post('/api/v1/orders/create')
-      .set('Authorization', `Bearer ${accessToken}`)
+      .set('Authorization', `Bearer ${ accessToken } `)
       .send({
         train_schedule_id: train.train_schedule_id,
         train_date: '2025-12-01',
@@ -739,7 +739,7 @@ describe('POST /api/v1/orders/create', () => {
 
     const response = await request(app)
       .post('/api/v1/orders/create')
-      .set('Authorization', `Bearer ${accessToken}`)
+      .set('Authorization', `Bearer ${ accessToken } `)
       .send({
         train_schedule_id: train.train_schedule_id,
         train_date: tomorrow.toISOString().split('T')[0],
@@ -761,7 +761,7 @@ describe('POST /api/v1/orders/create', () => {
 ```
 
 ### 3.2 支付订单接口
-```typescript
+    ```typescript
 // src/modules/orders/__tests__/pay.test.ts
 import { describe, it, expect, beforeEach } from '@jest/globals'
 import request from 'supertest'
@@ -794,55 +794,55 @@ describe('POST /api/v1/orders/:order_id/pay', () => {
 
   it('支付订单应该成功', async () => {
     const response = await request(app)
-      .post(`/api/v1/orders/${order.order_id}/pay`)
+      .post(`/ api / v1 / orders / ${ order.order_id }/pay`)
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({
+    .send({
         payment_method: 'alipay',
-      })
-      .expect(200)
+    })
+    .expect(200)
 
-    expect(response.body.code).toBe(0)
-    expect(response.body.data).toHaveProperty('payment_url')
-    
-    // 验证订单状态更新
-    const updatedOrder = await getConnection().query(
-      'SELECT * FROM orders WHERE order_id = ?',
-      [order.order_id]
-    )
-    expect(updatedOrder[0].status).toBe('paid')
+expect(response.body.code).toBe(0)
+expect(response.body.data).toHaveProperty('payment_url')
+
+// 验证订单状态更新
+const updatedOrder = await getConnection().query(
+    'SELECT * FROM orders WHERE order_id = ?',
+    [order.order_id]
+)
+expect(updatedOrder[0].status).toBe('paid')
   })
 
-  it('支付他人订单应该返回403', async () => {
+it('支付他人订单应该返回403', async () => {
     // 创建另一个用户的订单
     const otherUser = await UserFactory.create()
     const otherOrder = await OrderFactory.create({ user_id: otherUser.user_id })
 
     const response = await request(app)
-      .post(`/api/v1/orders/${otherOrder.order_id}/pay`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        payment_method: 'alipay',
-      })
-      .expect(403)
+        .post(`/api/v1/orders/${otherOrder.order_id}/pay`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+            payment_method: 'alipay',
+        })
+        .expect(403)
 
     expect(response.body.code).toBe(403)
     expect(response.body.message).toContain('无权操作')
-  })
+})
 
-  it('订单已支付应该返回400', async () => {
+it('订单已支付应该返回400', async () => {
     const paidOrder = await OrderFactory.createPaid({ user_id: user.user_id })
 
     const response = await request(app)
-      .post(`/api/v1/orders/${paidOrder.order_id}/pay`)
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        payment_method: 'alipay',
-      })
-      .expect(400)
+        .post(`/api/v1/orders/${paidOrder.order_id}/pay`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+            payment_method: 'alipay',
+        })
+        .expect(400)
 
     expect(response.body.code).toBe(400)
     expect(response.body.message).toContain('订单已支付')
-  })
+})
 })
 ```
 
@@ -859,56 +859,56 @@ import { app } from '@/app'
 import { UserFactory } from '@/tests/factories'
 
 describe('GET /api/v1/user/profile', () => {
-  let accessToken: string
-  let user: any
+    let accessToken: string
+    let user: any
 
-  beforeEach(async () => {
-    user = await UserFactory.create()
-    const loginResponse = await request(app)
-      .post('/api/v1/auth/login')
-      .send({
-        username: user.username,
-        password: 'Password123!',
-        nc_token: 'mock_token',
-      })
-    accessToken = loginResponse.body.data.access_token
-  })
-
-  it('获取用户资料应该成功', async () => {
-    const response = await request(app)
-      .get('/api/v1/user/profile')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200)
-
-    expect(response.body.code).toBe(0)
-    expect(response.body.data).toMatchObject({
-      user_id: user.user_id,
-      username: user.username,
-      email: user.email,
-      phone: user.phone,
+    beforeEach(async () => {
+        user = await UserFactory.create()
+        const loginResponse = await request(app)
+            .post('/api/v1/auth/login')
+            .send({
+                username: user.username,
+                password: 'Password123!',
+                nc_token: 'mock_token',
+            })
+        accessToken = loginResponse.body.data.access_token
     })
-    // 密码不应该返回
-    expect(response.body.data).not.toHaveProperty('password')
-  })
+
+    it('获取用户资料应该成功', async () => {
+        const response = await request(app)
+            .get('/api/v1/user/profile')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .expect(200)
+
+        expect(response.body.code).toBe(0)
+        expect(response.body.data).toMatchObject({
+            user_id: user.user_id,
+            username: user.username,
+            email: user.email,
+            phone: user.phone,
+        })
+        // 密码不应该返回
+        expect(response.body.data).not.toHaveProperty('password')
+    })
 })
 
 describe('PUT /api/v1/user/profile', () => {
-  it('更新用户资料应该成功', async () => {
-    const response = await request(app)
-      .put('/api/v1/user/profile')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        nickname: '新昵称',
-        email: 'newemail@example.com',
-      })
-      .expect(200)
+    it('更新用户资料应该成功', async () => {
+        const response = await request(app)
+            .put('/api/v1/user/profile')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                nickname: '新昵称',
+                email: 'newemail@example.com',
+            })
+            .expect(200)
 
-    expect(response.body.code).toBe(0)
-    expect(response.body.data.nickname).toBe('新昵称')
-    expect(response.body.data.email).toBe('newemail@example.com')
-  })
+        expect(response.body.code).toBe(0)
+        expect(response.body.data.nickname).toBe('新昵称')
+        expect(response.body.data.email).toBe('newemail@example.com')
+    })
 })
-```
+    ```
 
 ---
 

@@ -4,5 +4,5 @@ import { afterEach } from 'vitest'
 
 // 自动清理
 afterEach(() => {
-  cleanup()
+    cleanup()
 })

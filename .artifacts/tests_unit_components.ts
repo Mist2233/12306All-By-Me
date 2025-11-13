@@ -1,6 +1,6 @@
 # 12306系统前端组件测试用例
 
-生成日期: 2025-11-13
+生成日期: 2025 - 11 - 13
 TestGenerator Agent: Frontend Test Engineer
 测试框架: Vitest + React Testing Library
 
@@ -9,7 +9,7 @@ TestGenerator Agent: Frontend Test Engineer
 ## 1. 基础组件测试
 
 ### 1.1 Button组件测试
-```typescript
+    ```typescript
 // src/components/Button/__tests__/Button.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -64,7 +64,7 @@ describe('Button Component', () => {
 ```
 
 ### 1.2 Input组件测试
-```typescript
+    ```typescript
 // src/components/Input/__tests__/Input.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -128,7 +128,7 @@ describe('Input Component', () => {
 ```
 
 ### 1.3 Modal组件测试
-```typescript
+    ```typescript
 // src/components/Modal/__tests__/Modal.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -205,7 +205,7 @@ describe('Modal Component', () => {
 ## 2. 业务组件测试
 
 ### 2.1 SlideVerify滑动验证组件测试
-```typescript
+    ```typescript
 // src/components/SlideVerify/__tests__/SlideVerify.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -266,7 +266,7 @@ describe('SlideVerify Component', () => {
 ```
 
 ### 2.2 Autocomplete自动补全组件测试
-```typescript
+    ```typescript
 // src/components/Autocomplete/__tests__/Autocomplete.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -360,7 +360,7 @@ describe('Autocomplete Component', () => {
 ```
 
 ### 2.3 DatePicker日期选择器测试
-```typescript
+    ```typescript
 // src/components/DatePicker/__tests__/DatePicker.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -437,7 +437,7 @@ describe('DatePicker Component', () => {
 ## 3. 页面组件测试
 
 ### 3.1 登录页面测试
-```typescript
+    ```typescript
 // src/pages/Login/__tests__/Login.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -624,7 +624,7 @@ describe('LoginPage', () => {
 ```
 
 ### 3.2 车票查询页面测试
-```typescript
+    ```typescript
 // src/pages/TicketQuery/__tests__/TicketQuery.test.tsx
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
@@ -758,4 +758,4 @@ describe('TicketQueryPage', () => {
 
 ---
 
-下一步: 后端API集成测试 (tests_api_integration.ts)
+    下一步: 后端API集成测试(tests_api_integration.ts)

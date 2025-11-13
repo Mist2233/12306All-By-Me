@@ -1,51 +1,51 @@
 {
-  "name": "12306-railway-system",
-  "version": "1.0.0",
-  "description": "12306铁路购票系统 - 全栈TDD实现",
-  "private": true,
-  "workspaces": [
-    "packages/frontend",
-    "packages/backend"
-  ],
-  "scripts": {
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "npm run dev --workspace=packages/frontend",
-    "dev:backend": "npm run dev --workspace=packages/backend",
-    "test": "npm run test:frontend && npm run test:backend",
-    "test:frontend": "npm run test --workspace=packages/frontend",
-    "test:backend": "npm run test --workspace=packages/backend",
-    "test:e2e": "playwright test",
-    "test:coverage": "npm run test:coverage --workspaces",
-    "build": "npm run build --workspaces",
-    "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.40.0",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
-    "concurrently": "^8.2.2",
-    "eslint": "^8.54.0",
-    "prettier": "^3.1.0",
-    "typescript": "^5.3.2"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Mist2233/12306All-By-Me.git"
-  },
-  "keywords": [
-    "12306",
-    "railway",
-    "ticket",
-    "booking",
-    "tdd",
-    "react",
-    "nodejs"
-  ],
-  "author": "Developer Agent",
-  "license": "MIT"
+    "name": "12306-railway-system",
+    "version": "1.0.0",
+    "description": "12306铁路购票系统 - 全栈TDD实现",
+    "private": true,
+    "workspaces": [
+        "packages/frontend",
+        "packages/backend"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+        "dev:frontend": "npm run dev --workspace=packages/frontend",
+        "dev:backend": "npm run dev --workspace=packages/backend",
+        "test": "npm run test:frontend && npm run test:backend",
+        "test:frontend": "npm run test --workspace=packages/frontend",
+        "test:backend": "npm run test --workspace=packages/backend",
+        "test:e2e": "playwright test",
+        "test:coverage": "npm run test:coverage --workspaces",
+        "build": "npm run build --workspaces",
+        "lint": "eslint . --ext .ts,.tsx",
+        "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.40.0",
+        "@typescript-eslint/eslint-plugin": "^6.13.0",
+        "@typescript-eslint/parser": "^6.13.0",
+        "concurrently": "^8.2.2",
+        "eslint": "^8.54.0",
+        "prettier": "^3.1.0",
+        "typescript": "^5.3.2"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Mist2233/12306All-By-Me.git"
+    },
+    "keywords": [
+        "12306",
+        "railway",
+        "ticket",
+        "booking",
+        "tdd",
+        "react",
+        "nodejs"
+    ],
+    "author": "Developer Agent",
+    "license": "MIT"
 }

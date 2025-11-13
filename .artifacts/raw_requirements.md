@@ -549,14 +549,14 @@
 
 ### API端点列表
 
-| 功能 | Method | URL | 参数 |
-|------|--------|-----|------|
-| 用户登录 | POST | /passport/web/login | username, password, nc_token |
-| 滑动验证 | POST | /passport/web/slide-passcode | - |
-| 获取短信验证码 | POST | /passport/web/getMessageCode | mobile |
-| 认证 | POST | /passport/web/auth/uamtk | appid |
-| 余票查询 | GET | /otn/leftTicket/init | train_date, from_station, to_station |
-| 提交订单 | POST | /otn/confirmPassenger/submitOrder | 乘客信息, 座位类型 |
+| 功能           | Method | URL                               | 参数                                 |
+| -------------- | ------ | --------------------------------- | ------------------------------------ |
+| 用户登录       | POST   | /passport/web/login               | username, password, nc_token         |
+| 滑动验证       | POST   | /passport/web/slide-passcode      | -                                    |
+| 获取短信验证码 | POST   | /passport/web/getMessageCode      | mobile                               |
+| 认证           | POST   | /passport/web/auth/uamtk          | appid                                |
+| 余票查询       | GET    | /otn/leftTicket/init              | train_date, from_station, to_station |
+| 提交订单       | POST   | /otn/confirmPassenger/submitOrder | 乘客信息, 座位类型                   |
 
 ### 设计规范总结
 

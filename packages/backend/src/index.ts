@@ -16,18 +16,18 @@ app.use(express.urlencoded({ extended: true }))
 
 // 健康检查
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+    res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // API路由
 app.get('/api/v1', (req, res) => {
-  res.json({ message: '12306 Railway System API v1' })
+    res.json({ message: '12306 Railway System API v1' })
 })
 
 // 启动服务器
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`)
-  console.log(`📍 http://localhost:${PORT}`)
+    console.log(`🚀 Server is running on port ${PORT}`)
+    console.log(`📍 http://localhost:${PORT}`)
 })
 
 export default app

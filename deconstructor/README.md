@@ -22,6 +22,7 @@
 
 - 🚀 **整站爬取** - 智能发现并爬取整个网站的所有页面
 - 🎯 **精确 URL 爬取** - 支持手动指定要爬取的 URL 列表
+- 🔐 **登录状态支持** - 保存并复用登录状态，爬取需要认证的页面
 - 🔍 **同源策略** - 只爬取目标域名下的页面，避免爬到站外
 - 📈 **站点地图生成** - 自动生成可视化的站点结构图
 - 🌐 **本地预览服务器** - 内置异步 HTTP 服务器预览解构结果
@@ -81,6 +82,40 @@ python site_crawler.py
 
 这将自动发现并爬取整个网站（注意：可能爬取大量页面）。
 
+#### 方式三：爬取需要登录的页面（新功能 🔐）
+
+对于需要登录才能访问的页面（如个人中心、订单页面等），使用认证爬虫：
+
+```bash
+python auth_crawler.py
+```
+
+**使用流程：**
+
+1. **首次使用 - 保存登录状态**
+   - 运行程序后选择 `1. 手动登录并保存状态`
+   - 浏览器会自动打开登录页面
+   - 手动完成登录（输入用户名、密码、验证码）
+   - 登录成功后按 Enter 键保存状态到 `auth_state.json`
+
+2. **后续使用 - 爬取受保护页面**
+   - 选择 `2. 爬取需要登录的页面`
+   - 输入要爬取的 URL（一行一个）
+   - 程序会自动使用保存的登录状态进行爬取
+
+**示例 URL：**
+```
+https://kyfw.12306.cn/otn/leftTicket/init           # 车票查询
+https://kyfw.12306.cn/otn/view/passengers.html      # 常用联系人
+https://kyfw.12306.cn/otn/queryOrder/initNoComplete # 未完成订单
+```
+
+**优势：**
+- ✅ 一次登录，多次使用（直到 Cookie 过期）
+- ✅ 不存储密码，只保存会话 Token
+- ✅ 避免自动化登录被检测
+- ✅ 支持所有需要认证的页面
+
 ### 5. 查看结果
 
 爬取完成后，所有资源都会保存在 `deconstructed_site` 目录中。
@@ -100,8 +135,10 @@ python server_async.py -d deconstructed_site
 ├── config.py                  # 配置文件（目录名称、文件扩展名等）
 ├── site_crawler.py            # 整站爬虫（支持链接自动发现）
 ├── crawl_specific_urls.py     # 精确 URL 爬取脚本
+├── auth_crawler.py            # 认证爬虫（支持登录状态保存与复用）🆕
 ├── resource_downloader.py     # 资源下载器（CSS、JS、图片、字体）
 ├── server_async.py            # 异步 HTTP 服务器（用于预览）
+├── auth_state.json            # 登录状态文件（自动生成，不提交到Git）
 ├── requirements.txt           # Python 依赖列表
 ├── README.md                  # 项目说明文档
 ├── 工作日志.md                 # 开发日志（详细记录了开发过程）
@@ -195,17 +232,36 @@ with sync_playwright() as p:
     browser.close()
 ```
 
-### 示例 4：本地预览
+### 示例 4：爬取需要登录的页面（代码方式）
+
+```python
+from auth_crawler import AuthenticatedCrawler
+
+# 创建认证爬虫实例
+crawler = AuthenticatedCrawler()
+
+# 首次使用：手动登录并保存状态
+crawler.manual_login()
+
+# 之后可以重复使用登录状态
+crawler.crawl_with_auth([
+    "https://kyfw.12306.cn/otn/leftTicket/init",
+    "https://kyfw.12306.cn/otn/view/passengers.html",
+    "https://kyfw.12306.cn/otn/queryOrder/initNoComplete",
+])
+```
+
+### 示例 5：本地预览
 
 ```bash
 # 启动服务器
-python server_async.py
-
-# 指定目录
 python server_async.py -d deconstructed_site
 
 # 指定端口
 python server_async.py -p 8080
+
+# 不自动打开浏览器
+python server_async.py -d deconstructed_site --no-browser
 ```
 
 ## 🎯 核心原理
@@ -221,7 +277,14 @@ python server_async.py -p 8080
 - **字体资源**：识别 `@font-face` 规则并下载字体文件
 - **SVG 资源**：支持内联 SVG 和 SVG Sprite
 
-### 3. 路径自动修正
+### 3. 登录状态管理
+
+- **Cookie 保存**：自动保存浏览器 Cookies
+- **Storage 同步**：保存 localStorage 和 sessionStorage
+- **状态复用**：一次登录，多次使用（直到过期）
+- **安全设计**：不存储密码，只保存会话 Token
+
+### 4. 路径自动修正
 
 下载资源后，自动更新所有引用路径为本地相对路径，确保离线可用：
 
@@ -233,7 +296,7 @@ python server_async.py -p 8080
 <link href="css/style.css" rel="stylesheet">
 ```
 
-### 4. 链接发现机制
+### 5. 链接发现机制
 
 自动提取页面中的所有 `<a>` 标签链接，判断是否同源，加入爬取队列。
 
@@ -247,7 +310,8 @@ python server_async.py -p 8080
 ## ⚠️ 注意事项
 
 1. **法律合规性**：请确保你爬取的网站允许这样的操作，遵守网站的 robots.txt 和服务条款。
-2. **速率控制**：避免对目标服务器造成过大压力，建议添加适当的延迟。
+2. **登录安全性**：`auth_state.json` 包含登录凭证，请勿分享或提交到 Git。
+3. **速率控制**：避免对目标服务器造成过大压力，建议添加适当的延迟。
 3. **存储空间**：爬取整站可能会占用大量磁盘空间，请确保有足够的空间。
 4. **网络稳定性**：爬取过程需要稳定的网络连接，建议在网络条件良好时进行。
 5. **仅供学习**：本工具仅用于学习和研究目的，不得用于商业用途或非法用途。
@@ -277,6 +341,22 @@ page.wait_for_timeout(5000)  # 等待 5 秒
 ### 4. 服务器 Ctrl+C 关闭缓慢
 
 这是 Python 标准库 http.server 的已知问题。建议使用 `server_async.py`，支持快速关闭。
+
+### 5. 登录状态失效
+
+登录状态通常在 7 天后过期，如遇到需要重新登录的情况：
+
+```bash
+python auth_crawler.py
+# 选择 1. 手动登录并保存状态
+```
+
+### 6. 无法爬取需要登录的页面
+
+确保：
+- 已经使用 `auth_crawler.py` 保存了登录状态
+- `auth_state.json` 文件存在且未过期
+- 目标页面确实需要登录（可在浏览器中测试）
 
 ## 📝 开发日志
 

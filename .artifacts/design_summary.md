@@ -101,14 +101,14 @@ Designer Agent: System Architect
 
 ## 场景覆盖矩阵
 
-| 模块 | BDD场景数 | 数据库表 | API端点 | UI组件 |
-|------|-----------|----------|---------|--------|
-| 用户认证 | 9 | 4张 | 6个 | 5个 (Button, Input, Modal, Tabs, SlideVerify, QRCode) |
-| 车票查询 | 9 | 4张 | 5个 | 4个 (Autocomplete, DatePicker, Checkbox, TrainList) |
-| 订单管理 | 3 | 2张 | 5个 | 3个 (Radio, Checkbox, Modal) |
-| 用户中心 | 2 | 1张 | 6个 | 2个 (Input, Button) |
-| 通用 | 5 | 2张 | 0个 | 3个 (Alert, Container, Header, Footer) |
-| **总计** | **28** | **13张** | **22个** | **15个** |
+| 模块     | BDD场景数 | 数据库表 | API端点  | UI组件                                                |
+| -------- | --------- | -------- | -------- | ----------------------------------------------------- |
+| 用户认证 | 9         | 4张      | 6个      | 5个 (Button, Input, Modal, Tabs, SlideVerify, QRCode) |
+| 车票查询 | 9         | 4张      | 5个      | 4个 (Autocomplete, DatePicker, Checkbox, TrainList)   |
+| 订单管理 | 3         | 2张      | 5个      | 3个 (Radio, Checkbox, Modal)                          |
+| 用户中心 | 2         | 1张      | 6个      | 2个 (Input, Button)                                   |
+| 通用     | 5         | 2张      | 0个      | 3个 (Alert, Container, Header, Footer)                |
+| **总计** | **28**    | **13张** | **22个** | **15个**                                              |
 
 ---
 
