@@ -1,0 +1,70 @@
+{
+    "timestamp": "2025-11-13T22:30:00",
+    "public_urls": [
+        {
+            "name": "首页",
+            "url": "https://www.12306.cn/index/",
+            "description": "包含顶部导航栏、车票查询表单、常用功能快捷入口",
+            "requires_auth": false
+        },
+        {
+            "name": "登录页",
+            "url": "https://kyfw.12306.cn/otn/resources/login.html",
+            "description": "用户登录界面",
+            "requires_auth": false
+        },
+        {
+            "name": "注册页",
+            "url": "https://kyfw.12306.cn/otn/regist/init",
+            "description": "用户注册界面",
+            "requires_auth": false
+        },
+        {
+            "name": "车次列表页-单程",
+            "url": "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc",
+            "description": "车票查询结果页",
+            "requires_auth": false
+        },
+        {
+            "name": "车次列表页-中转",
+            "url": "https://kyfw.12306.cn/otn/lcQuery/init",
+            "description": "中转换乘查询页",
+            "requires_auth": false
+        },
+        {
+            "name": "车次列表页-往返",
+            "url": "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=wf",
+            "description": "往返车票查询页",
+            "requires_auth": false
+        }
+    ],
+    "authenticated_urls": [
+        {
+            "name": "订单填写页",
+            "url": "https://kyfw.12306.cn/otn/confirmPassenger/initDc",
+            "description": "需登录后查看，填写乘客信息和购票详情",
+            "requires_auth": true
+        },
+        {
+            "name": "个人信息页",
+            "url": "https://kyfw.12306.cn/otn/view/information.html",
+            "description": "需登录后查看，用户基本信息管理",
+            "requires_auth": true
+        },
+        {
+            "name": "乘客管理页",
+            "url": "https://kyfw.12306.cn/otn/view/passengers.html",
+            "description": "需登录后查看，常用联系人管理",
+            "requires_auth": true
+        },
+        {
+            "name": "订单管理页",
+            "url": "https://kyfw.12306.cn/otn/view/train_order.html",
+            "description": "需登录后查看，历史订单查询",
+            "requires_auth": true
+        }
+    ],
+    "total_public": 6,
+    "total_authenticated": 4,
+    "total_urls": 10
+}

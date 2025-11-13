@@ -103,11 +103,14 @@ def crawl_specific_urls(urls, output_dir="deconstructed_site"):
 
 def main():
     """主函数"""
-    # 定义要爬取的URL列表
+    # 定义要爬取的URL列表 - 公开页面（无需登录）
     urls = [
-        "https://www.12306.cn/index/",
-        "https://kyfw.12306.cn/otn/resources/login.html",
-        "https://kyfw.12306.cn/otn/regist/init",
+        "https://www.12306.cn/index/",  # 首页
+        "https://kyfw.12306.cn/otn/resources/login.html",  # 登录页
+        "https://kyfw.12306.cn/otn/regist/init",  # 注册页
+        "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=dc",  # 车次列表-单程
+        "https://kyfw.12306.cn/otn/lcQuery/init",  # 车次列表-中转
+        "https://kyfw.12306.cn/otn/leftTicket/init?linktypeid=wf",  # 车次列表-往返
     ]
 
     # 从命令行参数获取输出目录（可选）
