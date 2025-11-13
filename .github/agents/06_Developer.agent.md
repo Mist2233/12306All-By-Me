@@ -75,6 +75,69 @@ Get-Content .artifacts/ui_interface.yml
 
 ### 步骤 3: 实现代码
 
+#### 3.0 首先确保数据库正确初始化
+
+**检查Test Generator生成的文件**：
+- ✅ `backend/src/database/schema.sql` - 表结构定义
+- ✅ `backend/test/fixtures/seeds.sql` - 测试种子数据
+- ✅ `backend/test/helpers/dbSetup.js` - 测试数据库初始化工具
+
+**创建生产环境数据库初始化脚本 `backend/src/database/init.js`**：
+```javascript
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export async function initDatabase(dbPath = './database.sqlite') {
+  const db = await open({
+    filename: dbPath,
+    driver: sqlite3.Database
+  });
+
+  // 读取并执行schema.sql
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  const schema = fs.readFileSync(schemaPath, 'utf-8');
+  await db.exec(schema);
+
+  console.log('✅ 数据库表结构初始化完成');
+
+  // 可选：在开发环境下插入初始数据
+  if (process.env.NODE_ENV === 'development') {
+    const seedsPath = path.join(__dirname, '../../test/fixtures/seeds.sql');
+    if (fs.existsSync(seedsPath)) {
+      const seeds = fs.readFileSync(seedsPath, 'utf-8');
+      await db.exec(seeds);
+      console.log('✅ 开发环境种子数据已插入');
+    }
+  }
+
+  return db;
+}
+```
+
+**应用启动时初始化数据库 `backend/src/app.js`**：
+```javascript
+import express from 'express';
+import { initDatabase } from './database/init.js';
+
+const app = express();
+app.use(express.json());
+
+// 初始化数据库连接
+let db;
+(async () => {
+  db = await initDatabase();
+  app.locals.db = db; // 将数据库实例挂载到app.locals供路由使用
+  console.log('✅ 数据库连接已建立');
+})();
+
+export default app;
+```
+
 #### 3.1 实现数据库层示例
 
 对于接口 `DB-FindUserByPhone`：
@@ -367,15 +430,21 @@ npm test
 ```powershell
 git add backend/ frontend/
 
-git commit -m "feat(implement): 实现所有接口功能，所有测试通过 ✅
+git commit -m "feat(implement): 实现所有接口功能和数据库初始化，所有测试通过 ✅
 
-基于Test Generator的80个测试用例，完成了所有接口的业务逻辑实现。
+基于Test Generator的80个测试用例和数据库schema，完成了完整的功能实现。
+
+## 数据库实现：
+- 生产初始化脚本: backend/src/database/init.js
+- SQLite表结构: 5张表（users, trains, orders, verification_codes, passengers）
+- Repository层: 12个数据操作方法
+- 12306车次数据: 内置5条真实车次信息用于演示
 
 ## 实现成果：
 - 数据库操作: 12个Repository方法
 - 后端API: 15个路由端点
 - 前端组件: 10个React组件
-- 总计代码行数: 约2500行
+- 总计代码行数: 约2800行
 
 ## 测试结果：
 - 后端测试: ✅ 45/45 passed (100%)

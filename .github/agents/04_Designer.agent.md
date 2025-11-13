@@ -85,6 +85,184 @@ if (Test-Path .artifacts/ui_interface.yml) {
       description: "为登录功能创建。"
 ```
 
+#### 3.1.1 数据库表结构设计 (`database_schema.yml`)
+
+**重要提示**：在设计数据库接口的同时，必须定义完整的数据库表结构和测试种子数据。
+
+**表结构定义格式**：
+```yaml
+tables:
+  - name: users
+    description: 用户信息表
+    columns:
+      - name: id
+        type: TEXT
+        primaryKey: true
+        description: UUID主键
+      - name: phone_number
+        type: TEXT
+        unique: true
+        notNull: true
+        description: 手机号（11位）
+      - name: name
+        type: TEXT
+        description: 真实姓名
+      - name: id_card
+        type: TEXT
+        description: 身份证号
+      - name: created_at
+        type: DATETIME
+        default: CURRENT_TIMESTAMP
+        description: 注册时间
+    indexes:
+      - columns: [phone_number]
+        unique: true
+
+  - name: trains
+    description: 列车信息表（12306车次查询的核心表）
+    columns:
+      - name: id
+        type: TEXT
+        primaryKey: true
+        description: 车次ID（如 G1234）
+      - name: train_number
+        type: TEXT
+        notNull: true
+        description: 车次号
+      - name: from_station
+        type: TEXT
+        notNull: true
+        description: 出发站
+      - name: to_station
+        type: TEXT
+        notNull: true
+        description: 到达站
+      - name: departure_time
+        type: TEXT
+        notNull: true
+        description: 发车时间（HH:MM格式）
+      - name: arrival_time
+        type: TEXT
+        notNull: true
+        description: 到达时间
+      - name: duration
+        type: TEXT
+        description: 运行时长（如"5小时30分"）
+      - name: second_class_price
+        type: REAL
+        description: 二等座价格
+      - name: first_class_price
+        type: REAL
+        description: 一等座价格
+      - name: business_class_price
+        type: REAL
+        description: 商务座价格
+      - name: second_class_seats
+        type: INTEGER
+        description: 二等座余票数
+      - name: first_class_seats
+        type: INTEGER
+        description: 一等座余票数
+      - name: business_class_seats
+        type: INTEGER
+        description: 商务座余票数
+    indexes:
+      - columns: [from_station, to_station]
+      - columns: [train_number]
+
+  - name: orders
+    description: 订单信息表
+    columns:
+      - name: id
+        type: TEXT
+        primaryKey: true
+      - name: user_id
+        type: TEXT
+        notNull: true
+        foreignKey:
+          table: users
+          column: id
+      - name: train_id
+        type: TEXT
+        notNull: true
+        foreignKey:
+          table: trains
+          column: id
+      - name: passenger_name
+        type: TEXT
+        notNull: true
+      - name: seat_type
+        type: TEXT
+        notNull: true
+        description: 座位类型（二等座/一等座/商务座）
+      - name: status
+        type: TEXT
+        default: 'pending'
+        description: 订单状态（pending/paid/cancelled）
+      - name: created_at
+        type: DATETIME
+        default: CURRENT_TIMESTAMP
+
+seedData:
+  users:
+    - id: 'user-001'
+      phone_number: '13800138000'
+      name: '张三'
+      id_card: '110101199001011234'
+    - id: 'user-002'
+      phone_number: '13800138001'
+      name: '李四'
+      id_card: '110101199002021234'
+
+  trains:
+    - id: 'G1234'
+      train_number: 'G1234'
+      from_station: '北京南'
+      to_station: '上海虹桥'
+      departure_time: '08:00'
+      arrival_time: '13:30'
+      duration: '5小时30分'
+      second_class_price: 553.5
+      first_class_price: 933.0
+      business_class_price: 1748.0
+      second_class_seats: 120
+      first_class_seats: 50
+      business_class_seats: 10
+    - id: 'G1235'
+      train_number: 'G1235'
+      from_station: '北京南'
+      to_station: '上海虹桥'
+      departure_time: '09:00'
+      arrival_time: '14:28'
+      duration: '5小时28分'
+      second_class_price: 553.5
+      first_class_price: 933.0
+      business_class_price: 1748.0
+      second_class_seats: 95
+      first_class_seats: 30
+      business_class_seats: 5
+    - id: 'D123'
+      train_number: 'D123'
+      from_station: '北京'
+      to_station: '天津'
+      departure_time: '07:30'
+      arrival_time: '08:05'
+      duration: '35分钟'
+      second_class_price: 54.5
+      first_class_price: 65.5
+      business_class_price: null
+      second_class_seats: 200
+      first_class_seats: 80
+      business_class_seats: 0
+```
+
+**输出文件**：`.artifacts/database_schema.yml`
+
+**设计原则**：
+1. **真实数据**：种子数据应反映12306真实的车次信息（车次号、站点、时间、价格）
+2. **测试覆盖**：确保种子数据覆盖各种测试场景（有票、无票、不同座位类型）
+3. **数据完整性**：定义外键关系和索引，确保数据一致性
+
 #### 3.2 后端 API 接口 (`api_interface.yml`)
 
 **ID 规范**: `API-[HTTP-Method]-[Resource]`
@@ -173,15 +351,18 @@ if (Test-Path .artifacts/ui_interface.yml) {
 git add .artifacts/data_interface.yml
 git add .artifacts/api_interface.yml
 git add .artifacts/ui_interface.yml
+git add .artifacts/database_schema.yml
 
-git commit -m "feat(design): 完成三层接口设计（Database/API/UI）
+git commit -m "feat(design): 完成三层接口设计和数据库表结构定义
 
-基于Standarder提供的28个BDD场景，完成了完整的接口设计工作。
+基于Standarder提供的28个BDD场景，完成了完整的接口设计和数据库架构工作。
 
 ## 设计成果：
 - 数据库接口: 12个（用户、验证码、车次、订单等）
 - 后端API接口: 15个（认证、查询、订单管理等）
 - 前端UI接口: 10个（表单、列表、详情页等）
+- 数据库表: 5个（users, trains, orders, verification_codes, passengers）
+- 测试种子数据: 3张表（users: 2条, trains: 10条, orders: 5条）
 - 总计接口数: 37个
 
 ## 设计原则：
@@ -229,7 +410,8 @@ Architecture: Three-Layer"
 1. `.artifacts/data_interface.yml` - 数据库接口库
 2. `.artifacts/api_interface.yml` - 后端API接口库
 3. `.artifacts/ui_interface.yml` - 前端UI接口库
-4. **Git Commit** - 包含三个接口文件和详细设计说明
+4. `.artifacts/database_schema.yml` - 数据库表结构和种子数据定义
+5. **Git Commit** - 包含四个设计文件和详细说明
 
 ---
 
