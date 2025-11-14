@@ -128,3 +128,40 @@ router.post('/login', async (req: Request, res: Response) => {
 
 // 导出router和mockUsers供测试使用
 export { router as authRouter, mockUsers };
+
+// POST /api/v1/auth/register
+router.post('/register', async (req: Request, res: Response) => {
+    try {
+        const { username, email, phone, password } = req.body as any
+        if (!password || (!username && !email && !phone)) {
+            return res.status(400).json({ code: 400, message: '缺少注册必要字段' })
+        }
+
+        // 唯一性检查
+        const exists = mockUsers.find(
+            (u) => u.username === username || u.email === email || u.phone === phone
+        )
+        if (exists) {
+            return res.status(409).json({ code: 409, message: '用户已存在' })
+        }
+
+        // 创建新用户（简化）
+        const newUser = new User()
+        newUser.user_id = 'user-' + Date.now()
+        newUser.username = username || (email ? email.split('@')[0] : phone)
+        newUser.email = email || ''
+        newUser.phone = phone || ''
+        newUser.password = password
+        newUser.status = 'active'
+        // 手动 hash password since not using TypeORM insert hooks here
+        const bcrypt = require('bcrypt')
+        newUser.password_hash = await bcrypt.hash(password, 10)
+
+        mockUsers.push(newUser)
+
+        res.status(201).json({ code: 0, message: '注册成功', data: { user_id: newUser.user_id } })
+    } catch (err) {
+        console.error('Register error', err)
+        res.status(500).json({ code: 500, message: '服务器错误' })
+    }
+})

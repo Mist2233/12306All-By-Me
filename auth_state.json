@@ -1,0 +1,127 @@
+{
+  "cookies": [
+    {
+      "name": "_uab_collina",
+      "value": "176304224051269850632172",
+      "domain": "kyfw.12306.cn",
+      "path": "/otn/resources",
+      "expires": 1797602240.514312,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_passport_session",
+      "value": "a1013d24460447438c7f90e5407ec3935775",
+      "domain": "kyfw.12306.cn",
+      "path": "/passport",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "uamtk",
+      "value": "8NoDqZtVdNwmrZv_FY9R_KchAV8tYUtrOsHcWFl5F3E51M1M0",
+      "domain": "kyfw.12306.cn",
+      "path": "/passport",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "JSESSIONID",
+      "value": "71E62EDE2F4A6F5D47C7F1D4A1E10733",
+      "domain": "kyfw.12306.cn",
+      "path": "/otn",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "tk",
+      "value": "4kcSUJ1tTc0C7gIP2ZXTmrFoCFC-TbkA5QXNcWHuG18huM1M0",
+      "domain": "kyfw.12306.cn",
+      "path": "/otn",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "route",
+      "value": "c5c62a339e7744272a54643b3be5bf64",
+      "domain": "kyfw.12306.cn",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "BIGipServerotn",
+      "value": "1910046986.24610.0000",
+      "domain": "kyfw.12306.cn",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "BIGipServerpassport",
+      "value": "1005060362.50215.0000",
+      "domain": "kyfw.12306.cn",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "guidesStatus",
+      "value": "off",
+      "domain": ".12306.cn",
+      "path": "/",
+      "expires": 1763906262,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "highContrastMode",
+      "value": "defaltMode",
+      "domain": ".12306.cn",
+      "path": "/",
+      "expires": 1763906240,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "cursorStatus",
+      "value": "off",
+      "domain": ".12306.cn",
+      "path": "/",
+      "expires": 1763906240,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "uKey",
+      "value": "3e6d28e4b746cfd7a20a9a48e8b4f4a535ba1e6039a2183f55b9c0b4510ba581",
+      "domain": "kyfw.12306.cn",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "local_storage": {},
+  "session_storage": {},
+  "timestamp": 1763042266.3116055
+}

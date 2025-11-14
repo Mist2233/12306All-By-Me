@@ -1,0 +1,36 @@
+:root {
+    /* Colors */
+    --color-primary: #0078d4;
+    --color-primary-600: #0063b1;
+    --color-bg: #ffffff;
+    --color-text: #222222;
+    --color-muted: #6b7280;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+
+    /* Typography */
+    --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    --font-size-base: 14px;
+
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    background: var(--color-bg);
+    margin: 0;
+}

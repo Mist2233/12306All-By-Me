@@ -1,0 +1,49 @@
+{
+  "schedules": [
+    {
+      "id": "G101-1",
+      "train_code": "G101",
+      "from_station": "Beijing",
+      "to_station": "Shanghai",
+      "departure_time": "08:00",
+      "arrival_time": "12:30",
+      "duration_minutes": 270,
+      "business_price": 1200,
+      "first_price": 800,
+      "second_price": 400,
+      "business_available": 5,
+      "first_available": 20,
+      "second_available": 120
+    },
+    {
+      "id": "D202-1",
+      "train_code": "D202",
+      "from_station": "Beijing",
+      "to_station": "Tianjin",
+      "departure_time": "09:15",
+      "arrival_time": "10:10",
+      "duration_minutes": 55,
+      "business_price": 200,
+      "first_price": 120,
+      "second_price": 60,
+      "business_available": 2,
+      "first_available": 10,
+      "second_available": 200
+    },
+    {
+      "id": "K333-1",
+      "train_code": "K333",
+      "from_station": "Guangzhou",
+      "to_station": "Shenzhen",
+      "departure_time": "14:00",
+      "arrival_time": "18:00",
+      "duration_minutes": 240,
+      "business_price": 300,
+      "first_price": 180,
+      "second_price": 90,
+      "business_available": 0,
+      "first_available": 5,
+      "second_available": 80
+    }
+  ]
+}
